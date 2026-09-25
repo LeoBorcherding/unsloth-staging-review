@@ -651,11 +651,7 @@ def banner_autofill_available(app_state, environ) -> bool:
 
 
 def bootstrap_banner_lines(
-    username: str,
-    bootstrap_path,
-    password: Optional[str],
-    *,
-    autofill_available: bool,
+    username: str, bootstrap_path, password: Optional[str], *, autofill_available: bool
 ) -> "list[str]":
     """The first-boot banner for a freshly created admin account.
 
@@ -818,9 +814,7 @@ async def lifespan(app: FastAPI):
     # to serve with the default credential: never capture the bootstrap password into app.state.
     _suppress_bootstrap = getattr(app.state, "suppress_bootstrap_injection", False)
     _created = storage.ensure_default_admin()
-    app.state.bootstrap_password = (
-        None if _suppress_bootstrap else storage.get_bootstrap_password()
-    )
+    app.state.bootstrap_password = None if _suppress_bootstrap else storage.get_bootstrap_password()
     # A tunnel launch runs the pre-bind gate first and that gate seeds the account, so
     # _created is False there and the whole banner would be skipped on exactly the launch
     # that needs it. requires_password_change: the gate may also have taken a new password
@@ -1531,7 +1525,7 @@ app.add_middleware(
     allow_headers = ["*"],
     # allow_headers is the REQUEST side; a response header is unreadable to JS unless
     # exposed, and Studio is cross-origin from tauri://localhost and tunnels.
-    expose_headers = ["X-Unsloth-Conflict-Kind"],
+    expose_headers = ["X-Unsloth-Conflict-Kind", "X-Unsloth-Monitor-ID"],
     # is_allowed_origin closes the moment the tunnel URL clears, but a preflight already cached by the browser
     # does not. Measured in WebKit: with Starlette's 600s default, a state-changing request still REACHED the
     # server after remote access was stopped. Keep the stale window short.
